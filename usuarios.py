@@ -1,14 +1,10 @@
 from config import CENTRAL_IP, CENTRAL_PORT, REPLICA_PORT, REPLICA_IP
 import zmq
 import time
-import random
 import threading
 
 # Diccionario para almacenar el estado de los usuarios (si siguen activos o no)
 usuarios_activos = {}
-#ip_central='10.43.100.106'
-#ip_central='localhost'
-
 
 # Función para manejar la solicitud de taxi
 def solicitar_taxi(req_socket, id_usuario, x, y):
@@ -20,7 +16,7 @@ def solicitar_taxi(req_socket, id_usuario, x, y):
     inicio_respuesta = time.time()
 
     try:
-        # Esperar respuesta del servidor con timeout de 30 segundos, establecido por nosotras
+        # Esperar respuesta del servidor con timeout de 30 segundos
         req_socket.setsockopt(zmq.RCVTIMEO, 30000)
         respuesta = req_socket.recv_string()
         fin_respuesta = time.time()
@@ -40,8 +36,7 @@ def solicitar_taxi(req_socket, id_usuario, x, y):
     return True  # Indicar que se recibió respuesta correctamente
 
 
-
-# Función usuario actualizada en usuarios.py
+# Función para manejar cada usuario
 def usuario(id_usuario, x, y, tiempo_espera):
     context = zmq.Context()
 
@@ -68,23 +63,31 @@ def usuario(id_usuario, x, y, tiempo_espera):
         time.sleep(1)  # Esperar un segundo antes de intentar con otro servidor
 
 
-# Genera múltiples usuarios con atributos aleatorios
-def generador_usuarios(num_usuarios, grid_size):
+# Genera múltiples usuarios a partir de un archivo de coordenadas
+def generador_usuarios_desde_archivo(archivo_usuarios, tiempo_espera=5):
     threads = []
-    for i in range(num_usuarios):
-        # Generar posiciones aleatorias para los usuarios
-        x, y = random.randint(0, grid_size[0] - 1), random.randint(0, grid_size[1] - 1)
-        """tiempo_espera = random.randint(1, 5)  # Tiempo en segundos para simular minutos"""
-        tiempo_espera = 5
-        hilo_usuario = threading.Thread(target=usuario, args=(i, x, y, tiempo_espera))
-        threads.append(hilo_usuario)
-        hilo_usuario.start()
+    
+    try:
+        with open(archivo_usuarios, 'r') as file:
+            lineas = file.readlines()
+        
+        for i, linea in enumerate(lineas):
+            try:
+                x, y = map(int, linea.strip().split(','))
+                hilo_usuario = threading.Thread(target=usuario, args=(i, x, y, tiempo_espera))
+                threads.append(hilo_usuario)
+                hilo_usuario.start()
+            except ValueError:
+                print(f"Error: Coordenadas inválidas en la línea {i + 1}: {linea.strip()}")
+    
+    except FileNotFoundError:
+        print(f"Error: No se encontró el archivo {archivo_usuarios}")
+        return
 
     # Esperar a que todos los hilos terminen
     for thread in threads:
         thread.join()
 
 if __name__ == "__main__":
-    num_usuarios = 3  # Número de usuarios a simular
-    grid_size = (10, 10)  # Tamaño de la cuadrícula NxM
-    generador_usuarios(num_usuarios, grid_size)
+    archivo_usuarios = "coordenadas_usuarios.txt"  # Nombre del archivo con las coordenadas
+    generador_usuarios_desde_archivo(archivo_usuarios)
