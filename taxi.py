@@ -49,11 +49,10 @@ class Taxi:
         self.x = self.initial_x
         self.y = self.initial_y
         logger.info(f"Taxi {self.id} returned to initial position ({self.x}, {self.y})")
-
 def mover_taxi(id_taxi, grid_size, velocidad, max_servicios):
     context = zmq.Context()
     
-    # Configurar sockets con mejores opciones para red
+    # Configurar sockets
     pub_socket = context.socket(zmq.PUB)
     pub_socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
     pub_socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 300)
@@ -62,7 +61,7 @@ def mover_taxi(id_taxi, grid_size, velocidad, max_servicios):
     rep_socket = context.socket(zmq.REP)
     rep_socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
     rep_socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 300)
-    rep_socket.setsockopt(zmq.RCVTIMEO, 5000)  # 5 segundos timeout
+    rep_socket.setsockopt(zmq.RCVTIMEO, 5000)  # Timeout de 5 segundos
     rep_socket.bind(f"tcp://*:{TAXI_PORT_BASE + id_taxi}")
     
     logger.info(f"Taxi {id_taxi} escuchando en puerto {TAXI_PORT_BASE + id_taxi}")
@@ -78,84 +77,57 @@ def mover_taxi(id_taxi, grid_size, velocidad, max_servicios):
     
     try:
         # Guardar posición inicial
-        posicion_inicial = {
-            'x': random.randint(0, grid_size[0] - 1),
-            'y': random.randint(0, grid_size[1] - 1)
-        }
-        x, y = posicion_inicial['x'], posicion_inicial['y']
-        logger.info(f"Taxi {id_taxi} - Posición inicial: ({x}, {y})")
-        
-        servicios_realizados = 0
+        taxi = Taxi(id_taxi, grid_size, random.randint(0, grid_size[0] - 1), random.randint(0, grid_size[1] - 1), velocidad, max_servicios)
         tiempo_ultimo_movimiento = time.time()
         intervalo_movimiento = 30 / velocidad  # segundos reales entre movimientos
         
-        while servicios_realizados < max_servicios:
+        while taxi.services_completed < taxi.max_services:
             tiempo_actual = time.time()
             
-            # Actualizar posición solo cuando ha pasado el intervalo correcto
+            # Intentar mover el taxi
             if tiempo_actual - tiempo_ultimo_movimiento >= intervalo_movimiento:
-                x, y = mover_taxi_en_grilla(x, y, grid_size, velocidad)
-                tiempo_ultimo_movimiento = tiempo_actual
+                moved = taxi.move_taxi()
+                if moved:
+                    tiempo_ultimo_movimiento = tiempo_actual
+                    logger.info(f"Taxi {taxi.id} se ha movido a una nueva posición.")
+                else:
+                    logger.warning(f"Taxi {taxi.id} no se pudo mover en esta iteración.")
             
-            taxi_posicion = {"x": x, "y": y}
-            mensaje = json.dumps(taxi_posicion)
-            pub_socket.send_string(f"ubicacion_taxi {id_taxi} {mensaje}")
-            logger.info(f"Taxi {id_taxi} - Posición actual: ({x}, {y})")
-            
-            estado_taxi = {"estado": "disponible"}
-            mensaje_estado = json.dumps(estado_taxi)
-            pub_socket.send_string(f"estado_taxi {id_taxi} {mensaje_estado}")
-            
+            # Publicar la posición actual del taxi
+            taxi_info = {
+                "x": taxi.x,
+                "y": taxi.y,
+                "ip": ip_taxi,
+                "port": TAXI_PORT_BASE + id_taxi,
+                "status": "available"
+            }
+            pub_socket.send_string(f"ubicacion_taxi {taxi.id} {json.dumps(taxi_info)}")
+            logger.info(f"Taxi {taxi.id} - Publicando posición actualizada: {taxi_info}")
+
+            # Simular servicio si hay solicitudes
             poller = zmq.Poller()
             poller.register(rep_socket, zmq.POLLIN)
             socks = dict(poller.poll(1000))
             
             if socks.get(rep_socket) == zmq.POLLIN:
                 servicio = rep_socket.recv_string()
-                logger.info(f"Taxi {id_taxi} - Recibido servicio: {servicio}")
-                rep_socket.send_string(f"Taxi {id_taxi} aceptando servicio")
+                logger.info(f"Taxi {taxi.id} - Recibido servicio: {servicio}")
+                rep_socket.send_string(f"Taxi {taxi.id} aceptando servicio")
                 
                 # Simular servicio (tiempo aleatorio entre 1-3 segundos)
                 time.sleep(random.uniform(1, 3))
-                
-                # Volver a posición inicial
-                x, y = posicion_inicial['x'], posicion_inicial['y']
-                logger.info(f"Taxi {id_taxi} - Volviendo a posición inicial: ({x}, {y})")
-                
-                servicios_realizados += 1
-                if servicios_realizados < max_servicios:
-                    logger.info(f"Taxi {id_taxi} - Servicios completados: {servicios_realizados}/{max_servicios}")
-                else:
-                    logger.info(f"Taxi {id_taxi} - Completados todos los servicios ({max_servicios})")
-                    break
-            
-            # Publicar la IP junto con la posición
-            # Mensaje de ubicación
-            taxi_info = {
-                "x": x,
-                "y": y,
-                "ip": ip_taxi,
-                "port": TAXI_PORT_BASE + id_taxi,
-                "status": "available"
-            }
-            logger.info(f"Taxi {id_taxi} publicando: {taxi_info}")
-            mensaje = json.dumps(taxi_info)
-            pub_socket.send_string(f"ubicacion_taxi {id_taxi} {json.dumps(taxi_info)}")
+                taxi.return_to_initial_position()
+                taxi.services_completed += 1
+                logger.info(f"Taxi {taxi.id} - Servicios completados: {taxi.services_completed}/{taxi.max_services}")
 
-            # Mensaje de estado
-            estado_taxi = {
-                "status": "available"
-            }
-            pub_socket.send_string(f"estado_taxi {id_taxi} {json.dumps(estado_taxi)}")
-            
-            
-            # Simular el paso del tiempo (1 segundo real = 1 minuto simulado)
+            # Esperar antes de la próxima iteración
             time.sleep(1)
     
     finally:
         pub_socket.close()
         rep_socket.close()
         context.term()
+
 
 def mover_taxi_en_grilla(x, y, grid_size, velocidad):
     if velocidad == 0:

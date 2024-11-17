@@ -175,7 +175,6 @@ def servidor(is_primary=True):
         while True:
             sockets_activados = dict(poller.poll(1000))
             logger.debug(f"Sockets activados: {list(sockets_activados.keys())}")
-
             if sub_socket in sockets_activados:
                 mensaje = sub_socket.recv_string()
                 partes = mensaje.split(maxsplit=2)
@@ -184,7 +183,6 @@ def servidor(is_primary=True):
                     try:
                         datos = json.loads(contenido)
                         if tema == "ubicacion_taxi":
-                            # Procesar mensaje de ubicación
                             if 'x' not in datos or 'y' not in datos:
                                 logger.error(f"Posición inválida para Taxi {id_taxi}: {datos}")
                                 continue
@@ -195,17 +193,18 @@ def servidor(is_primary=True):
                             taxis_activos[id_taxi] = True
                             logger.info(f"Taxi {id_taxi} registrado con posición: {datos}")
                         elif tema == "estado_taxi":
-                            # Procesar mensaje de estado
                             if 'status' not in datos:
                                 logger.error(f"Estado inválido para Taxi {id_taxi}: {datos}")
                                 continue
                             if id_taxi in taxis:
                                 taxis[id_taxi]['status'] = datos['status']
                                 logger.info(f"Taxi {id_taxi} actualizado con estado: {datos['status']}")
+
                             else:
                                 logger.error(f"Estado recibido para un taxi no registrado: Taxi {id_taxi}")
                     except json.JSONDecodeError as e:
                         logger.error(f"Error al decodificar JSON para Taxi {id_taxi}: {e}")
+
 
 
                         if id_taxi not in taxis:
@@ -250,7 +249,7 @@ def servidor(is_primary=True):
                     user_rep_socket.send_string("Error interno del servidor")
 
             if ping_rep_socket in sockets_activados:
-                ping_message = ping_rep_socket.recv_string()
+                ping_messagea = ping_rep_socket.recv_string()
                 if ping_message == "ping":
                     ping_rep_socket.send_string("pong")
 
@@ -279,18 +278,24 @@ def servidor(is_primary=True):
 
 
 def seleccionar_taxi(taxis, posicion_usuario):
-    """
-    Selecciona el taxi más cercano a la posición del usuario
-    """
-    if not taxis:
-        return None
-        
-    distancias = {
-        taxi_id: calcular_distancia(posicion, posicion_usuario)
-        for taxi_id, posicion in taxis.items()
+    # Filtrar taxis disponibles
+    taxis_disponibles = {
+        taxi_id: datos for taxi_id, datos in taxis.items() if datos.get('status') == 'available'
     }
     
-    return min(distancias.items(), key=lambda x: x[1])[0]
+    if not taxis_disponibles:
+        return None
+
+    # Calcular la distancia Manhattan
+    distancias = {
+        taxi_id: calcular_distancia(datos, posicion_usuario)
+        for taxi_id, datos in taxis_disponibles.items()
+    }
+    
+    # Seleccionar taxi con menor distancia
+    taxi_seleccionado = min(distancias.items(), key=lambda x: x[1])[0]
+    return taxi_seleccionado
+
 
 
 def user_is_still_waiting(solicitud, solicitudes_timeout):

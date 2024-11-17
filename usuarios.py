@@ -12,27 +12,33 @@ usuarios_activos = {}
 
 # Función para manejar la solicitud de taxi
 def solicitar_taxi(req_socket, id_usuario, x, y):
-    try:
-        mensaje = f"Usuario {id_usuario} en posición ({x},{y}) solicita un taxi"
-        req_socket.send_string(mensaje)
-        print(f"Usuario {id_usuario} ha solicitado un taxi.")
-        
-        inicio_respuesta = time.time()
+    # Enviar solicitud de taxi
+    req_socket.send_string(f"Usuario {id_usuario} en posición ({x},{y}) solicita un taxi")
+    print(f"Usuario {id_usuario} ha solicitado un taxi.")
+    
+    # Medir el tiempo de respuesta
+    inicio_respuesta = time.time()
 
-        # Aumentar el timeout a 30 segundos
+    try:
+        # Esperar respuesta del servidor con timeout de 30 segundos, establecido por nosotras
         req_socket.setsockopt(zmq.RCVTIMEO, 30000)
         respuesta = req_socket.recv_string()
         fin_respuesta = time.time()
 
         tiempo_respuesta = fin_respuesta - inicio_respuesta
         print(f"Usuario {id_usuario} recibió respuesta: {respuesta} en {tiempo_respuesta:.2f} segundos")
+
+        # Eliminar al usuario de los activos (ha sido atendido)
         usuarios_activos[id_usuario] = False
-        return True
 
     except zmq.error.Again:
+        # Si no se recibe respuesta a tiempo, el usuario se va a otro proveedor
         print(f"Usuario {id_usuario} no recibió respuesta, se va a otro proveedor")
-        usuarios_activos[id_usuario] = False
-        return False
+        usuarios_activos[id_usuario] = False  # Marca al usuario como inactivo (timeout)
+        return False  # Indicar que no se recibió respuesta
+
+    return True  # Indicar que se recibió respuesta correctamente
+
 
 
 # Función usuario actualizada en usuarios.py
@@ -44,6 +50,7 @@ def usuario(id_usuario, x, y, tiempo_espera):
         (f"tcp://{REPLICA_IP}:{REPLICA_PORT}", "Servidor Réplica")
     ]
     
+    print(f"Usuario {id_usuario} en posición ({x},{y}) esperando {tiempo_espera} segundos para solicitar un taxi.")
     time.sleep(tiempo_espera)
     usuarios_activos[id_usuario] = True
 
@@ -67,7 +74,8 @@ def generador_usuarios(num_usuarios, grid_size):
     for i in range(num_usuarios):
         # Generar posiciones aleatorias para los usuarios
         x, y = random.randint(0, grid_size[0] - 1), random.randint(0, grid_size[1] - 1)
-        tiempo_espera = random.randint(1, 5)  # Tiempo en segundos para simular minutos
+        """tiempo_espera = random.randint(1, 5)  # Tiempo en segundos para simular minutos"""
+        tiempo_espera = 5
         hilo_usuario = threading.Thread(target=usuario, args=(i, x, y, tiempo_espera))
         threads.append(hilo_usuario)
         hilo_usuario.start()
