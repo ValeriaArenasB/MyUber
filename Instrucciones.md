@@ -19,7 +19,7 @@ venv\Scripts\activate
 
 # En Unix o MacOS:
 
-source venv/bin/activate
+source venv/bin/acbtivate
 
 3. Instalar dependencias:
    pip install -r requirements.txt

@@ -30,6 +30,29 @@ def guardar_datos_archivo(json_file, data):
     with open(json_file, 'w') as file:
         json.dump(data, file, indent=4)
 
+
+def calcular_distancia(pos1, pos2):
+    """
+    Calcula la distancia Manhattan entre dos posiciones
+    """
+    return abs(pos1['x'] - pos2['x']) + abs(pos1['y'] - pos2['y'])
+
+def seleccionar_taxi(taxis, posicion_usuario):
+    """
+    Selecciona el taxi más cercano a la posición del usuario
+    """
+    if not taxis:
+        return None
+    
+    distancias = {
+        taxi_id: calcular_distancia(posicion, posicion_usuario)
+        for taxi_id, posicion in taxis.items()
+    }
+    
+    return min(distancias.items(), key=lambda x: x[1])[0]
+
+
+
 def sincronizar_estado(replica_socket, taxis, solicitudes, taxis_activos, solicitudes_resueltas):
     while True:
         estado = {
@@ -157,9 +180,34 @@ def servidor(is_primary=True):
                 mensaje = sub_socket.recv_string()
                 partes = mensaje.split(maxsplit=2)
                 if len(partes) == 3:
-                    id_taxi, posicion = int(partes[1]), partes[2]
+                    tema, id_taxi, contenido = partes[0], int(partes[1]), partes[2]
                     try:
-                        taxi_posicion = json.loads(posicion)
+                        datos = json.loads(contenido)
+                        if tema == "ubicacion_taxi":
+                            # Procesar mensaje de ubicación
+                            if 'x' not in datos or 'y' not in datos:
+                                logger.error(f"Posición inválida para Taxi {id_taxi}: {datos}")
+                                continue
+                            if 'ip' not in datos or 'port' not in datos:
+                                logger.error(f"Taxi {id_taxi} no tiene IP o puerto válidos: {datos}")
+                                continue
+                            taxis[id_taxi] = datos
+                            taxis_activos[id_taxi] = True
+                            logger.info(f"Taxi {id_taxi} registrado con posición: {datos}")
+                        elif tema == "estado_taxi":
+                            # Procesar mensaje de estado
+                            if 'status' not in datos:
+                                logger.error(f"Estado inválido para Taxi {id_taxi}: {datos}")
+                                continue
+                            if id_taxi in taxis:
+                                taxis[id_taxi]['status'] = datos['status']
+                                logger.info(f"Taxi {id_taxi} actualizado con estado: {datos['status']}")
+                            else:
+                                logger.error(f"Estado recibido para un taxi no registrado: Taxi {id_taxi}")
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Error al decodificar JSON para Taxi {id_taxi}: {e}")
+
+
                         if id_taxi not in taxis:
                             # Log when a new taxi is detected
                             logger.info(f"Nuevo taxi detectado: Taxi {id_taxi}")
@@ -170,28 +218,33 @@ def servidor(is_primary=True):
                     except json.JSONDecodeError as e:
                         logger.error(f"Error al decodificar JSON: {e}")
 
+
             if user_rep_socket in sockets_activados:
                 try:
                     solicitud = user_rep_socket.recv_string()
                     logger.info(f"Recibida solicitud: {solicitud}")
                     
+                    try:
+                        partes = solicitud.split("posición (")[1].split(")")[0].split(",")
+                        posicion_usuario = {'x': int(partes[0]), 'y': int(partes[1])}
+                    except (IndexError, ValueError) as e:
+                        logger.error(f"Error al extraer la posición del usuario: {e}")
+                        user_rep_socket.send_string("Error en el formato de la solicitud")
+                        continue
+
                     if taxis:
-                        logger.info(f"Taxis disponibles: {json.dumps(taxis, indent=2)}")
-                        taxi_seleccionado = seleccionar_taxi(taxis)
-                        taxi_info = taxis.get(taxi_seleccionado, {})
-                        
-                        exito, respuesta = solicitar_servicio_taxi(context, taxi_seleccionado, taxi_info)
-                        
-                        if exito:
-                            user_rep_socket.send_string(f"Taxi {taxi_seleccionado} asignado")
-                            logger.info(f"Servicio asignado exitosamente a taxi {taxi_seleccionado}")
+                        taxi_seleccionado = seleccionar_taxi(taxis, posicion_usuario)
+                        if taxi_seleccionado:
+                            taxi_info = taxis[taxi_seleccionado]
+                            exito, respuesta = solicitar_servicio_taxi(context, taxi_seleccionado, taxi_info)
+                            if exito:
+                                user_rep_socket.send_string(f"Taxi {taxi_seleccionado} asignado")
+                            else:
+                                user_rep_socket.send_string(f"Error: {respuesta}")
                         else:
-                            user_rep_socket.send_string(f"Error: {respuesta}")
-                            logger.error(f"No se pudo asignar el servicio a taxi {taxi_seleccionado}")
+                            user_rep_socket.send_string("No hay taxis disponibles")
                     else:
                         user_rep_socket.send_string("No hay taxis disponibles")
-                        logger.warning("No hay taxis disponibles")
-                        
                 except Exception as e:
                     logger.error(f"Error procesando solicitud: {str(e)}")
                     user_rep_socket.send_string("Error interno del servidor")
@@ -224,8 +277,21 @@ def servidor(is_primary=True):
         context.term()
         logger.info("Contexto ZMQ terminado")
 
-def seleccionar_taxi(taxis):
-    return random.choice(list(taxis.keys()))
+
+def seleccionar_taxi(taxis, posicion_usuario):
+    """
+    Selecciona el taxi más cercano a la posición del usuario
+    """
+    if not taxis:
+        return None
+        
+    distancias = {
+        taxi_id: calcular_distancia(posicion, posicion_usuario)
+        for taxi_id, posicion in taxis.items()
+    }
+    
+    return min(distancias.items(), key=lambda x: x[1])[0]
+
 
 def user_is_still_waiting(solicitud, solicitudes_timeout):
     user_id = solicitud.split()[1]

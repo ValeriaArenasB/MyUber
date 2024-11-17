@@ -130,15 +130,24 @@ def mover_taxi(id_taxi, grid_size, velocidad, max_servicios):
                     break
             
             # Publicar la IP junto con la posición
+            # Mensaje de ubicación
             taxi_info = {
                 "x": x,
                 "y": y,
                 "ip": ip_taxi,
-                "status": "available",
-                "port": TAXI_PORT_BASE + id_taxi
+                "port": TAXI_PORT_BASE + id_taxi,
+                "status": "available"
             }
+            logger.info(f"Taxi {id_taxi} publicando: {taxi_info}")
             mensaje = json.dumps(taxi_info)
-            pub_socket.send_string(f"ubicacion_taxi {id_taxi} {mensaje}")
+            pub_socket.send_string(f"ubicacion_taxi {id_taxi} {json.dumps(taxi_info)}")
+
+            # Mensaje de estado
+            estado_taxi = {
+                "status": "available"
+            }
+            pub_socket.send_string(f"estado_taxi {id_taxi} {json.dumps(estado_taxi)}")
+            
             
             # Simular el paso del tiempo (1 segundo real = 1 minuto simulado)
             time.sleep(1)

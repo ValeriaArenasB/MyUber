@@ -15,7 +15,7 @@ def solicitar_taxi(req_socket, id_usuario, x, y):
     try:
         mensaje = f"Usuario {id_usuario} en posición ({x},{y}) solicita un taxi"
         req_socket.send_string(mensaje)
-        print(f"Usuario {sid_usuario} ha solicitado un taxi.")
+        print(f"Usuario {id_usuario} ha solicitado un taxi.")
         
         inicio_respuesta = time.time()
 
