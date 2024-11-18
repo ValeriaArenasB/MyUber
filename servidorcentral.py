@@ -32,15 +32,9 @@ def guardar_datos_archivo(json_file, data):
 
 
 def calcular_distancia(pos1, pos2):
-    """
-    Calcula la distancia Manhattan entre dos posiciones
-    """
     return abs(pos1['x'] - pos2['x']) + abs(pos1['y'] - pos2['y'])
 
 def seleccionar_taxi(taxis, posicion_usuario):
-    """
-    Selecciona el taxi más cercano a la posición del usuario
-    """
     if not taxis:
         return None
     
@@ -69,11 +63,7 @@ def sincronizar_estado(replica_socket, taxis, solicitudes, taxis_activos, solici
         time.sleep(3)
 
 def solicitar_servicio_taxi(context, taxi_id, taxi_info):
-    """
-    Función separada para manejar la solicitud al taxi con mejor manejo de errores
-    """
     try:
-        # Obtener IP del taxi de su información
         taxi_ip = taxi_info.get('ip')
         if not taxi_ip:
             logger.error(f"No se encontró IP para taxi {taxi_id}")
@@ -83,9 +73,9 @@ def solicitar_servicio_taxi(context, taxi_id, taxi_info):
         taxi_address = f"tcp://{taxi_ip}:{taxi_port}"
         logger.info(f"Intentando conectar con taxi en {taxi_address}")
 
-        # Crear socket temporal con timeout
+        # Crear socket temporal con timeout de 30
         temp_taxi_socket = context.socket(zmq.REQ)
-        temp_taxi_socket.setsockopt(zmq.RCVTIMEO, 5000)  # 5 segundos timeout
+        temp_taxi_socket.setsockopt(zmq.RCVTIMEO, 30000)
         temp_taxi_socket.setsockopt(zmq.LINGER, 0)
         temp_taxi_socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
         temp_taxi_socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 300)
@@ -97,7 +87,6 @@ def solicitar_servicio_taxi(context, taxi_id, taxi_info):
             # Enviar solicitud
             temp_taxi_socket.send_string("Servicio asignado")
             logger.info(f"Solicitud enviada a taxi {taxi_id}")
-            
             # Esperar respuesta
             respuesta = temp_taxi_socket.recv_string()
             logger.info(f"Respuesta recibida de taxi {taxi_id}: {respuesta}")

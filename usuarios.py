@@ -12,7 +12,6 @@ def solicitar_taxi(req_socket, id_usuario, x, y):
     req_socket.send_string(f"Usuario {id_usuario} en posición ({x},{y}) solicita un taxi")
     print(f"Usuario {id_usuario} ha solicitado un taxi a través del socket {req_socket.getsockopt(zmq.LAST_ENDPOINT)}.")
     
-    # Medir el tiempo de respuesta
     inicio_respuesta = time.time()
 
     try:
@@ -31,9 +30,9 @@ def solicitar_taxi(req_socket, id_usuario, x, y):
         # Si no se recibe respuesta a tiempo, el usuario se va a otro proveedor
         print(f"Usuario {id_usuario} no recibió respuesta, se va a otro proveedor")
         usuarios_activos[id_usuario] = False  # Marca al usuario como inactivo (timeout)
-        return False  # Indicar que no se recibió respuesta
+        return False 
 
-    return True  # Indicar que se recibió respuesta correctamente
+    return True  
 
 
 # Función para manejar cada usuario
@@ -62,7 +61,6 @@ def usuario(id_usuario, x, y, tiempo_espera):
         req_socket.close()
         time.sleep(1)  # Esperar un segundo antes de intentar con otro servidor
 
-    # Si no se pudo conectar a ningún servidor, el usuario sigue activo
     usuarios_activos[id_usuario] = True
 
 

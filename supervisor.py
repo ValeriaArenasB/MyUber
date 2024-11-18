@@ -6,7 +6,6 @@ import signal
 #Verificar si Broker ya está corriendo usando pgrep
 def broker_esta_corriendo():
     try:
-        # Utilizamos el comando pgrep para buscar el proceso broker.py
         resultado = subprocess.run(['pgrep', '-f', 'broker.py'], stdout=subprocess.PIPE)
         if resultado.stdout:  # Si stdout tiene datos, significa que el broker está corriendo
             pid = int(resultado.stdout.decode().strip())
@@ -26,14 +25,12 @@ def iniciar_broker():
 #Verificar si un proceso con PID específico sigue corriendo
 def verificar_broker_por_pid(pid):
     try:
-        # Verificamos si el proceso con el PID existe
         os.kill(pid, 0)  # Señal 0 no mata el proceso, solo verifica si existe
         return True
     except OSError:
         return False
 
 def supervisor_broker():
-    #Función que supervisa el Broker y lo reinicia si se cae
     broker_pid = broker_esta_corriendo()  # Verificar si ya está corriendo
     broker_proceso = None
 
@@ -45,7 +42,7 @@ def supervisor_broker():
 
     while True:
         if broker_proceso:
-            # Si iniciamos el Broker desde el supervisor, verificar usando `poll()`
+            # Si iniciamos el Broker desde el supervisor, verificar usando poll
             if broker_proceso.poll() is not None:  # Si poll() devuelve algo distinto de None, el proceso terminó
                 print("El Broker ha fallado. Reiniciando...")
                 broker_proceso = iniciar_broker()

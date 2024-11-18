@@ -18,15 +18,14 @@ class Taxi:
         self.initial_y = initial_y
         self.x = initial_x
         self.y = initial_y
-        self.velocity = velocity  # Must be 1, 2, or 4 km/h
+        self.velocity = velocity 
         self.max_services = max_services
         self.services_completed = 0
         
     def move_taxi(self):
-        # Convert real seconds to simulation minutes
-        SIMULATION_SCALE = 60  # 1 real second = 1 simulation minute
-        movement_interval = 30 * 1  # 30 simulation minutes * 1 real second
-        distance = (self.velocity * movement_interval) / 60  # Distance to move in 30 minutes
+        SIMULATION_SCALE = 60  
+        movement_interval = 30
+        distance = (self.velocity * movement_interval) / 60 
         
         # Choose movement direction
         direction = random.choice(['vertical', 'horizontal'])
@@ -115,13 +114,11 @@ def mover_taxi(id_taxi, grid_size, velocidad, max_servicios):
                 logger.info(f"Taxi {taxi.id} - Recibido servicio: {servicio}")
                 rep_socket.send_string(f"Taxi {taxi.id} aceptando servicio")
                 
-                # Simular servicio (tiempo aleatorio entre 1-3 segundos)
                 time.sleep(random.uniform(1, 3))
                 taxi.return_to_initial_position()
                 taxi.services_completed += 1
                 logger.info(f"Taxi {taxi.id} - Servicios completados: {taxi.services_completed}/{taxi.max_services}")
 
-            # Esperar antes de la próxima iteración
             time.sleep(1)
     
     finally:
@@ -138,10 +135,6 @@ def mover_taxi_en_grilla(x, y, grid_size, velocidad):
     if velocidad not in [1, 2, 4]:
         velocidad = 1
     
-    # Ajustar el movimiento según la velocidad
-    # Ahora, a velocidad 1 km/h, nos movemos cada 30 segundos reales (30 minutos simulados)
-    # A velocidad 2 km/h, cada 15 segundos reales
-    # A velocidad 4 km/h, cada 7.5 segundos reales
     movimiento = random.choice(['vertical', 'horizontal'])
     if movimiento == 'vertical':
         delta = random.choice([-1, 1])
@@ -159,7 +152,7 @@ if __name__ == "__main__":
         
     id_taxi = int(sys.argv[1])
     grid_size = (10, 10)
-    velocidad = random.choice([1, 2, 4])  # Velocidad aleatoria del taxi (km/h)
+    velocidad = random.choice([1, 2, 4])
     max_servicios = 3
     logger.info(f"Iniciando Taxi {id_taxi} con velocidad {velocidad} km/h")
     mover_taxi(id_taxi, grid_size, velocidad, max_servicios)

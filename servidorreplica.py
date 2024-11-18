@@ -130,11 +130,7 @@ class ServidorReplica:
                 logger.error(f"Error al decodificar JSON: {e}")
 
     def solicitar_servicio_taxi(self, context, taxi_id, taxi_info):
-        """
-        Función separada para manejar la solicitud al taxi con mejor manejo de errores
-        """
         try:
-            # Obtener IP del taxi de su información
             taxi_ip = taxi_info.get('ip')
             if not taxi_ip:
                 logger.error(f"No se encontró IP para taxi {taxi_id}")
@@ -144,9 +140,9 @@ class ServidorReplica:
             taxi_address = f"tcp://{taxi_ip}:{taxi_port}"
             logger.info(f"Intentando conectar con taxi en {taxi_address}")
 
-            # Crear socket temporal con timeout
+            # Crear socket temporal
             temp_taxi_socket = context.socket(zmq.REQ)
-            temp_taxi_socket.setsockopt(zmq.RCVTIMEO, 5000)  # 5 segundos timeout
+            temp_taxi_socket.setsockopt(zmq.RCVTIMEO, 30000)  # 30 segundos timeout
             temp_taxi_socket.setsockopt(zmq.LINGER, 0)
             temp_taxi_socket.setsockopt(zmq.TCP_KEEPALIVE, 1)
             temp_taxi_socket.setsockopt(zmq.TCP_KEEPALIVE_IDLE, 300)
@@ -158,7 +154,6 @@ class ServidorReplica:
                 # Enviar solicitud
                 temp_taxi_socket.send_string("Servicio asignado")
                 logger.info(f"Solicitud enviada a taxi {taxi_id}")
-                
                 # Esperar respuesta
                 respuesta = temp_taxi_socket.recv_string()
                 logger.info(f"Respuesta recibida de taxi {taxi_id}: {respuesta}")
@@ -259,15 +254,12 @@ class ServidorReplica:
                 time.sleep(1)
                 continue
 
-        # Cleanup
+        # cleanup**
         for socket in [self.user_rep_socket, self.ping_rep_socket, self.sub_socket, self.taxi_req_socket]:
             if socket:
                 socket.close()
 
     def actualizar_estado_interno(self, mensaje):
-        """
-        Actualizar el estado interno sin logging excesivo
-        """
         try:
             partes = mensaje.split(maxsplit=2)
             if len(partes) == 3:
