@@ -224,17 +224,30 @@ def servidor(is_primary=True):
                             exito, respuesta = solicitar_servicio_taxi(context, taxi_seleccionado, taxi_info)
                             if exito:
                                 user_rep_socket.send_string(f"Taxi {taxi_seleccionado} asignado")
+                                # Actualizar la lista de servicios
                                 data['servicios'].append({"usuario": posicion_usuario, "taxi": taxi_seleccionado})
+                                # Incrementar servicios satisfactorios
+                                data['estadisticas']['servicios_satisfactorios'] += 1
                                 guardar_datos_archivo(json_file, data)
                             else:
                                 user_rep_socket.send_string(f"Error: {respuesta}")
+                                # Incrementar servicios denegados
+                                data['estadisticas']['servicios_negados'] += 1
+                                guardar_datos_archivo(json_file, data)
                         else:
                             user_rep_socket.send_string("No hay taxis disponibles")
+                            # Incrementar servicios denegados
+                            data['estadisticas']['servicios_negados'] += 1
+                            guardar_datos_archivo(json_file, data)
                     else:
                         user_rep_socket.send_string("No hay taxis disponibles")
+                        # Incrementar servicios denegados
+                        data['estadisticas']['servicios_negados'] += 1
+                        guardar_datos_archivo(json_file, data)
                 except Exception as e:
                     logger.error(f"Error procesando solicitud: {str(e)}")
                     user_rep_socket.send_string("Error interno del servidor")
+
 
             if ping_rep_socket in sockets_activados:
                 ping_message = ping_rep_socket.recv_string()

@@ -1,11 +1,31 @@
 {
     "taxis": [
         {
-            "id": 3,
-            "x": 5,
-            "y": 4,
+            "id": 11,
+            "x": 8,
+            "y": 1,
             "ip": "127.0.0.1",
-            "port": 6003,
+            "port": 6011,
+            "status": "available",
+            "services_completed": 2,
+            "max_services": 3
+        },
+        {
+            "id": 33,
+            "x": 9,
+            "y": 6,
+            "ip": "127.0.0.1",
+            "port": 6033,
+            "status": "available",
+            "services_completed": 2,
+            "max_services": 3
+        },
+        {
+            "id": 22,
+            "x": 3,
+            "y": 1,
+            "ip": "127.0.0.1",
+            "port": 6022,
             "status": "available",
             "services_completed": 2,
             "max_services": 3
@@ -273,10 +293,241 @@
                 "y": 9
             },
             "taxi": 3
+        },
+        {
+            "usuario": {
+                "x": 4,
+                "y": 1
+            },
+            "taxi": 11
+        },
+        {
+            "usuario": {
+                "x": 0,
+                "y": 0
+            },
+            "taxi": 11
+        },
+        {
+            "usuario": {
+                "x": 8,
+                "y": 9
+            },
+            "taxi": 22
+        },
+        {
+            "usuario": {
+                "x": 7,
+                "y": 10
+            },
+            "taxi": 22
+        },
+        {
+            "usuario": {
+                "x": 0,
+                "y": 8
+            },
+            "taxi": 11
+        },
+        {
+            "usuario": {
+                "x": 6,
+                "y": 3
+            },
+            "taxi": 22
+        },
+        {
+            "usuario": {
+                "x": 0,
+                "y": 0
+            },
+            "taxi": 11
+        },
+        {
+            "usuario": {
+                "x": 6,
+                "y": 3
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 4,
+                "y": 1
+            },
+            "taxi": 11
+        },
+        {
+            "usuario": {
+                "x": 7,
+                "y": 10
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 8,
+                "y": 9
+            },
+            "taxi": 22
+        },
+        {
+            "usuario": {
+                "x": 0,
+                "y": 8
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 2,
+                "y": 3
+            },
+            "taxi": 11
+        },
+        {
+            "usuario": {
+                "x": 10,
+                "y": 1
+            },
+            "taxi": 22
+        },
+        {
+            "usuario": {
+                "x": 9,
+                "y": 9
+            },
+            "taxi": 22
+        },
+        {
+            "usuario": {
+                "x": 0,
+                "y": 0
+            },
+            "taxi": 22
+        },
+        {
+            "usuario": {
+                "x": 8,
+                "y": 9
+            },
+            "taxi": 11
+        },
+        {
+            "usuario": {
+                "x": 4,
+                "y": 1
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 6,
+                "y": 3
+            },
+            "taxi": 11
+        },
+        {
+            "usuario": {
+                "x": 7,
+                "y": 10
+            },
+            "taxi": 11
+        },
+        {
+            "usuario": {
+                "x": 2,
+                "y": 3
+            },
+            "taxi": 22
+        },
+        {
+            "usuario": {
+                "x": 1,
+                "y": 3
+            },
+            "taxi": 22
+        },
+        {
+            "usuario": {
+                "x": 4,
+                "y": 1
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 6,
+                "y": 3
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 0,
+                "y": 0
+            },
+            "taxi": 22
+        },
+        {
+            "usuario": {
+                "x": 7,
+                "y": 4
+            },
+            "taxi": 11
+        },
+        {
+            "usuario": {
+                "x": 8,
+                "y": 9
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 4,
+                "y": 1
+            },
+            "taxi": 22
+        },
+        {
+            "usuario": {
+                "x": 7,
+                "y": 10
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 0,
+                "y": 8
+            },
+            "taxi": 22
+        },
+        {
+            "usuario": {
+                "x": 8,
+                "y": 2
+            },
+            "taxi": 11
+        },
+        {
+            "usuario": {
+                "x": 9,
+                "y": 9
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 6,
+                "y": 3
+            },
+            "taxi": 11
         }
     ],
     "estadisticas": {
-        "servicios_satisfactorios": 13,
-        "servicios_negados": 0
+        "servicios_satisfactorios": 40,
+        "servicios_negados": 25
     }
 }

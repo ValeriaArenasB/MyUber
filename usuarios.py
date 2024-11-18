@@ -15,8 +15,8 @@ def solicitar_taxi(req_socket, id_usuario, x, y):
     inicio_respuesta = time.time()
 
     try:
-        # Esperar respuesta del servidor con timeout de 30 segundos
-        req_socket.setsockopt(zmq.RCVTIMEO, 30000)
+        # Esperar respuesta del servidor con timeout de 15 segundos
+        req_socket.setsockopt(zmq.RCVTIMEO, 15000)  # Timeout de 15 segundos
         respuesta = req_socket.recv_string()
         fin_respuesta = time.time()
 
@@ -26,13 +26,13 @@ def solicitar_taxi(req_socket, id_usuario, x, y):
         # Eliminar al usuario de los activos (ha sido atendido)
         usuarios_activos[id_usuario] = False
 
-    except zmq.error.Again:
-        # Si no se recibe respuesta a tiempo, el usuario se va a otro proveedor
-        print(f"Usuario {id_usuario} no recibió respuesta, se va a otro proveedor")
-        usuarios_activos[id_usuario] = False  # Marca al usuario como inactivo (timeout)
-        return False 
+        return True  # Indica que se recibió respuesta
 
-    return True  
+    except zmq.error.Again:
+        # Si no se recibe respuesta a tiempo, el usuario cancela la solicitud
+        print(f"Usuario {id_usuario} no recibió respuesta en el tiempo esperado (timeout de 15 segundos). Cancelando solicitud.")
+        usuarios_activos[id_usuario] = False  # Marca al usuario como inactivo (timeout)
+        return False  # Indica que no se recibió respuesta
 
 
 # Función para manejar cada usuario
@@ -51,17 +51,16 @@ def usuario(id_usuario, x, y, tiempo_espera):
     for direccion_servidor, nombre_servidor in servidores:
         req_socket = context.socket(zmq.REQ)
         req_socket.connect(direccion_servidor)
-        print(f"Usuario {id_usuario} intentando conectarse a {nombre_servidor} ({direccion_servidor})...")
         
         if solicitar_taxi(req_socket, id_usuario, x, y):
             req_socket.close()
-            return
+            return  # Solicitud exitosa, se cierra la conexión
         
         print(f"Fallo en {nombre_servidor}, intentando con otro servidor...")
         req_socket.close()
         time.sleep(1)  # Esperar un segundo antes de intentar con otro servidor
 
-    usuarios_activos[id_usuario] = True
+    usuarios_activos[id_usuario] = False  # Marca al usuario como inactivo si no fue atendido
 
 
 # Genera múltiples usuarios a partir de un archivo de coordenadas
