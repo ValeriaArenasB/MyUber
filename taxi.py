@@ -35,20 +35,21 @@ class Taxi:
             new_x = max(0, min(self.x + distance, self.grid_size[0] - 1))
             if new_x != self.x:
                 self.x = new_x
-                logger.info(f"Taxi {self.id} moved to position ({self.x}, {self.y})")
+                logger.info(f"Taxi {self.id} moved to position ({self.x:.1f}, {self.y:.1f})")
                 return True
         else:
             new_y = max(0, min(self.y + distance, self.grid_size[1] - 1))
             if new_y != self.y:
                 self.y = new_y
-                logger.info(f"Taxi {self.id} moved to position ({self.x}, {self.y})")
+                logger.info(f"Taxi {self.id} moved to position ({self.x:.1f}, {self.y:.1f})")
                 return True
         return False
 
     def return_to_initial_position(self):
         self.x = self.initial_x
         self.y = self.initial_y
-        logger.info(f"Taxi {self.id} returned to initial position ({self.x}, {self.y})")
+        logger.info(f"Taxi {self.id} returned to initial position ({self.x:.1f}, {self.y:.1f})")
+
 def mover_taxi(id_taxi, grid_size, velocidad, max_servicios):
     context = zmq.Context()
     
@@ -95,8 +96,8 @@ def mover_taxi(id_taxi, grid_size, velocidad, max_servicios):
             
             # Publicar la posición actual del taxi
             taxi_info = {
-                "x": taxi.x,
-                "y": taxi.y,
+                "x": round(taxi.x, 1),
+                "y": round(taxi.y, 1),
                 "ip": ip_taxi,
                 "port": TAXI_PORT_BASE + id_taxi,
                 "status": "available"
