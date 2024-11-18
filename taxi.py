@@ -10,6 +10,24 @@ import socket
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+JSON_FILE = 'datos_taxis.json'
+
+def cargar_datos_archivo(json_file):
+    try:
+        with open(json_file, 'r') as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        data = {"taxis": []}
+    return data
+
+def guardar_datos_archivo(json_file, data):
+    try:
+        with open(json_file, 'w') as file:
+            json.dump(data, file, indent=4)
+        logger.info(f"Datos guardados correctamente en {json_file}.")
+    except Exception as e:
+        logger.error(f"Error al guardar datos en {json_file}: {e}")
+
 class Taxi:
     def __init__(self, id_taxi, grid_size, initial_x, initial_y, velocity, max_services):
         self.id = id_taxi
@@ -75,6 +93,11 @@ def mover_taxi(id_taxi, grid_size, velocidad, max_servicios):
         logger.error(f"Error obteniendo IP: {e}")
         ip_taxi = 'localhost'
     
+    # Cargar y validar datos desde el archivo JSON
+    data = cargar_datos_archivo(JSON_FILE)
+    if 'taxis' not in data:
+        data['taxis'] = []  # Asegurar que exista la clave "taxis"
+
     try:
         # Guardar posición inicial
         taxi = Taxi(id_taxi, grid_size, random.randint(0, grid_size[0] - 1), random.randint(0, grid_size[1] - 1), velocidad, max_servicios)
@@ -95,14 +118,30 @@ def mover_taxi(id_taxi, grid_size, velocidad, max_servicios):
             
             # Publicar la posición actual del taxi
             taxi_info = {
+                "id": taxi.id,
                 "x": round(taxi.x, 1),
                 "y": round(taxi.y, 1),
                 "ip": ip_taxi,
                 "port": TAXI_PORT_BASE + id_taxi,
-                "status": "available"
+                "status": "available",
+                "services_completed": taxi.services_completed,
+                "max_services": taxi.max_services
             }
             pub_socket.send_string(f"ubicacion_taxi {taxi.id} {json.dumps(taxi_info)}")
             logger.info(f"Taxi {taxi.id} - Publicando posición actualizada: {taxi_info}")
+
+            # Actualizar o agregar el taxi en los datos JSON
+            taxi_exists = False
+            for t in data['taxis']:
+                if t.get('id') == taxi.id:
+                    t.update(taxi_info)
+                    taxi_exists = True
+                    break
+            if not taxi_exists:
+                data['taxis'].append(taxi_info)
+
+            # Guardar los datos actualizados en el archivo JSON
+            guardar_datos_archivo(JSON_FILE, data)
 
             # Simular servicio si hay solicitudes
             poller = zmq.Poller()
@@ -126,24 +165,6 @@ def mover_taxi(id_taxi, grid_size, velocidad, max_servicios):
         rep_socket.close()
         context.term()
 
-
-def mover_taxi_en_grilla(x, y, grid_size, velocidad):
-    if velocidad == 0:
-        return x, y
-        
-    # Velocidades válidas: 1, 2 o 4 km/h
-    if velocidad not in [1, 2, 4]:
-        velocidad = 1
-    
-    movimiento = random.choice(['vertical', 'horizontal'])
-    if movimiento == 'vertical':
-        delta = random.choice([-1, 1])
-        nuevo_x = max(0, min(x + delta, grid_size[0] - 1))
-        return nuevo_x, y
-    else:
-        delta = random.choice([-1, 1])
-        nuevo_y = max(0, min(y + delta, grid_size[1] - 1))
-        return x, nuevo_y
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

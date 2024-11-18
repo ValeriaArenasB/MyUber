@@ -27,8 +27,13 @@ def cargar_datos_archivo(json_file):
     return data
 
 def guardar_datos_archivo(json_file, data):
-    with open(json_file, 'w') as file:
-        json.dump(data, file, indent=4)
+    try:
+        with open(json_file, 'w') as file:
+            json.dump(data, file, indent=4)
+        logger.info(f"Datos guardados correctamente en {json_file}.")
+    except Exception as e:
+        logger.error(f"Error al guardar datos en {json_file}: {e}")
+
 
 
 def calcular_distancia(pos1, pos2):
@@ -113,10 +118,8 @@ def servidor(is_primary=True):
     user_rep_port = CENTRAL_PORT if is_primary else REPLICA_PORT
 
     # Log de configuración inicial
-    logger.info(f"Modo: {'Primario' if is_primary else 'Réplica'}")
     logger.info(f"Puerto de usuarios: {user_rep_port}")
     logger.info(f"Broker IP: {BROKER_IP}")
-    logger.info(f"TAXI_PORT_BASE: {TAXI_PORT_BASE}")
 
     try:
         # Sockets for communication
@@ -131,9 +134,8 @@ def servidor(is_primary=True):
         user_rep_socket.bind(f"tcp://*:{user_rep_port}")
 
         taxi_req_socket = context.socket(zmq.REQ)
-        taxi_req_socket.setsockopt(zmq.RCVTIMEO, 5000)  # Timeout de 5 segundos
+        taxi_req_socket.setsockopt(zmq.RCVTIMEO, 30000)
         taxi_req_socket.setsockopt(zmq.LINGER, 0)  # No esperar al cerrar el socket
-        logger.info("Socket de taxis configurado con timeout de 5 segundos")
 
         # Health-check socket
         ping_rep_socket = context.socket(zmq.REP)
@@ -181,6 +183,11 @@ def servidor(is_primary=True):
                             taxis[id_taxi] = datos
                             taxis_activos[id_taxi] = True
                             logger.info(f"Taxi {id_taxi} registrado con posición: {datos}")
+
+                            # Actualizar datos en el archivo
+                            data['taxis'] = list(taxis.values())
+                            guardar_datos_archivo(json_file, data)
+
                         elif tema == "estado_taxi":
                             if 'status' not in datos:
                                 logger.error(f"Estado inválido para Taxi {id_taxi}: {datos}")
@@ -189,23 +196,13 @@ def servidor(is_primary=True):
                                 taxis[id_taxi]['status'] = datos['status']
                                 logger.info(f"Taxi {id_taxi} actualizado con estado: {datos['status']}")
 
+                                # Actualizar datos en el archivo
+                                data['taxis'] = list(taxis.values())
+                                guardar_datos_archivo(json_file, data)
                             else:
                                 logger.error(f"Estado recibido para un taxi no registrado: Taxi {id_taxi}")
                     except json.JSONDecodeError as e:
                         logger.error(f"Error al decodificar JSON para Taxi {id_taxi}: {e}")
-
-
-
-                        if id_taxi not in taxis:
-                            # Log when a new taxi is detected
-                            logger.info(f"Nuevo taxi detectado: Taxi {id_taxi}")
-                        taxis[id_taxi] = taxi_posicion
-                        taxis_activos[id_taxi] = True
-                        logger.info(f"Ubicación de Taxi {id_taxi}: {taxi_posicion}")
-                        guardar_datos_archivo(json_file, data)
-                    except json.JSONDecodeError as e:
-                        logger.error(f"Error al decodificar JSON: {e}")
-
 
             if user_rep_socket in sockets_activados:
                 try:
@@ -227,6 +224,8 @@ def servidor(is_primary=True):
                             exito, respuesta = solicitar_servicio_taxi(context, taxi_seleccionado, taxi_info)
                             if exito:
                                 user_rep_socket.send_string(f"Taxi {taxi_seleccionado} asignado")
+                                data['servicios'].append({"usuario": posicion_usuario, "taxi": taxi_seleccionado})
+                                guardar_datos_archivo(json_file, data)
                             else:
                                 user_rep_socket.send_string(f"Error: {respuesta}")
                         else:
@@ -264,6 +263,7 @@ def servidor(is_primary=True):
                 logger.error(f"Error cerrando socket: {str(e)}")
         context.term()
         logger.info("Contexto ZMQ terminado")
+
 
 
 def seleccionar_taxi(taxis, posicion_usuario):
