@@ -249,7 +249,7 @@ def servidor(is_primary=True):
                     user_rep_socket.send_string("Error interno del servidor")
 
             if ping_rep_socket in sockets_activados:
-                ping_messagea = ping_rep_socket.recv_string()
+                ping_message = ping_rep_socket.recv_string()
                 if ping_message == "ping":
                     ping_rep_socket.send_string("pong")
 
