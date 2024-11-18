@@ -10,7 +10,7 @@ usuarios_activos = {}
 def solicitar_taxi(req_socket, id_usuario, x, y):
     # Enviar solicitud de taxi
     req_socket.send_string(f"Usuario {id_usuario} en posición ({x},{y}) solicita un taxi")
-    print(f"Usuario {id_usuario} ha solicitado un taxi.")
+    print(f"Usuario {id_usuario} ha solicitado un taxi a través del socket {req_socket.getsockopt(zmq.LAST_ENDPOINT)}.")
     
     # Medir el tiempo de respuesta
     inicio_respuesta = time.time()
@@ -61,6 +61,9 @@ def usuario(id_usuario, x, y, tiempo_espera):
         print(f"Fallo en {nombre_servidor}, intentando con otro servidor...")
         req_socket.close()
         time.sleep(1)  # Esperar un segundo antes de intentar con otro servidor
+
+    # Si no se pudo conectar a ningún servidor, el usuario sigue activo
+    usuarios_activos[id_usuario] = True
 
 
 # Genera múltiples usuarios a partir de un archivo de coordenadas
