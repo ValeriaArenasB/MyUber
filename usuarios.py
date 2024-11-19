@@ -52,14 +52,15 @@ def usuario(id_usuario, x, y, tiempo_espera):
     for direccion_servidor, nombre_servidor in servidores:
         req_socket = context.socket(zmq.REQ)
         req_socket.connect(direccion_servidor)
-        
+
+        # Intentar solicitar el taxi
         if solicitar_taxi(req_socket, id_usuario, x, y):
             req_socket.close()
-            return  # Solicitud exitosa, se cierra la conexión
-        
-        print(f"Fallo en {nombre_servidor}, intentando con otro servidor...")
-        req_socket.close()
-        time.sleep(1)  # Esperar un segundo antes de intentar con otro servidor
+            return  # Solicitud exitosa, el usuario finaliza
+        else:
+            print(f"Usuario {id_usuario} fallo en {nombre_servidor} y finaliza la solicitud.")
+            req_socket.close()
+            return  # Finaliza en caso de fallo
 
     usuarios_activos[id_usuario] = False  # Marca al usuario como inactivo si no fue atendido
 
@@ -75,7 +76,7 @@ def generador_usuarios_desde_archivo(archivo_usuarios):
         for i, linea in enumerate(lineas):
             try:
                 x, y = map(int, linea.strip().split(','))
-                tiempo_espera = random.randint(1, 5) 
+                tiempo_espera = random.randint(1, 5)  # Generar un tiempo de espera entre 1 y 5 segundos
                 hilo_usuario = threading.Thread(target=usuario, args=(i, x, y, tiempo_espera))
                 threads.append(hilo_usuario)
                 hilo_usuario.start()
@@ -90,5 +91,5 @@ def generador_usuarios_desde_archivo(archivo_usuarios):
         thread.join()
 
 if __name__ == "__main__":
-    archivo_usuarios = "coordenadas_usuarios.txt"  # No cambiar
+    archivo_usuarios = "coordenadas_usuarios.txt"  # Nombre del archivo con las coordenadas
     generador_usuarios_desde_archivo(archivo_usuarios)

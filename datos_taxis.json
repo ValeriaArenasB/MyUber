@@ -2,12 +2,22 @@
     "taxis": [
         {
             "id": 33,
-            "x": 4,
-            "y": 7,
+            "x": 0,
+            "y": 3,
             "ip": "127.0.0.1",
             "port": 6033,
             "status": "available",
             "services_completed": 2,
+            "max_services": 3
+        },
+        {
+            "id": 55,
+            "x": 4.0,
+            "y": 1,
+            "ip": "127.0.0.1",
+            "port": 6055,
+            "status": "available",
+            "services_completed": 0,
             "max_services": 3
         }
     ],
@@ -138,10 +148,31 @@
                 "y": 2
             },
             "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 7,
+                "y": 4
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 7,
+                "y": 10
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 0,
+                "y": 0
+            },
+            "taxi": 33
         }
     ],
     "estadisticas": {
-        "servicios_satisfactorios": 18,
-        "servicios_negados": 41
+        "servicios_satisfactorios": 21,
+        "servicios_negados": 46
     }
 }
