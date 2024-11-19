@@ -1,53 +1,13 @@
 {
     "taxis": [
         {
-            "id": 11,
-            "x": 3.0,
-            "y": 3.0,
-            "ip": "127.0.0.1",
-            "port": 6011,
-            "status": "available",
-            "services_completed": 0,
-            "max_services": 3
-        },
-        {
-            "id": 22,
-            "x": 8,
-            "y": 3,
-            "ip": "127.0.0.1",
-            "port": 6022,
-            "status": "available",
-            "services_completed": 2,
-            "max_services": 3
-        },
-        {
             "id": 33,
-            "x": 2,
-            "y": 2,
+            "x": 4,
+            "y": 7,
             "ip": "127.0.0.1",
             "port": 6033,
             "status": "available",
             "services_completed": 2,
-            "max_services": 3
-        },
-        {
-            "id": 44,
-            "x": 2.0,
-            "y": 7.0,
-            "ip": "127.0.0.1",
-            "port": 6044,
-            "status": "available",
-            "services_completed": 1,
-            "max_services": 3
-        },
-        {
-            "id": 55,
-            "x": 6.0,
-            "y": 8.0,
-            "ip": "127.0.0.1",
-            "port": 6055,
-            "status": "available",
-            "services_completed": 0,
             "max_services": 3
         }
     ],
@@ -157,10 +117,31 @@
                 "y": 1
             },
             "taxi": 11
+        },
+        {
+            "usuario": {
+                "x": 2,
+                "y": 3
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 1,
+                "y": 3
+            },
+            "taxi": 33
+        },
+        {
+            "usuario": {
+                "x": 8,
+                "y": 2
+            },
+            "taxi": 33
         }
     ],
     "estadisticas": {
-        "servicios_satisfactorios": 15,
-        "servicios_negados": 27
+        "servicios_satisfactorios": 18,
+        "servicios_negados": 41
     }
 }

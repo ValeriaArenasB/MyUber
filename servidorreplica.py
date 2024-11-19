@@ -279,11 +279,9 @@ class ServidorReplica:
         return time.time() <= self.solicitudes_timeout.get(user_id, 0)
 
     def start(self):
-        # Iniciar thread de activación
         activation_thread = threading.Thread(target=self.listen_for_activation)
         activation_thread.start()
 
-        # Iniciar servidor
         self.servidor()
 
 if __name__ == "__main__":

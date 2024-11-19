@@ -1,15 +1,13 @@
 from dotenv import load_dotenv
 import os
-
-# Cargar variables de entorno
 load_dotenv()
 
-# Configuración de IPs - Usar valores por defecto solo si no están en .env
+# Configuración de IPs - se tiene localhost por defecto, cambiar para varios PCs
 BROKER_IP = os.getenv('BROKER_IP', 'localhost')
-REPLICA_IP = os.getenv('REPLICA_IP', 'localhost')  # Asegúrate que esta variable existe en .env
+REPLICA_IP = os.getenv('REPLICA_IP', 'localhost')  
 CENTRAL_IP = os.getenv('CENTRAL_IP', 'localhost')
 
-# Configuración de puertos
+
 BROKER_PUB_PORT = int(os.getenv('BROKER_PUB_PORT', 5555))
 BROKER_SUB_PORT = int(os.getenv('BROKER_SUB_PORT', 5556))
 CENTRAL_PORT = int(os.getenv('CENTRAL_PORT', 5551))

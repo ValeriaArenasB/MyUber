@@ -2,6 +2,7 @@ from config import CENTRAL_IP, CENTRAL_PORT, REPLICA_PORT, REPLICA_IP
 import zmq
 import time
 import threading
+import random
 
 # Diccionario para almacenar el estado de los usuarios (si siguen activos o no)
 usuarios_activos = {}
@@ -64,7 +65,7 @@ def usuario(id_usuario, x, y, tiempo_espera):
 
 
 # Genera múltiples usuarios a partir de un archivo de coordenadas
-def generador_usuarios_desde_archivo(archivo_usuarios, tiempo_espera=5):
+def generador_usuarios_desde_archivo(archivo_usuarios):
     threads = []
     
     try:
@@ -74,6 +75,7 @@ def generador_usuarios_desde_archivo(archivo_usuarios, tiempo_espera=5):
         for i, linea in enumerate(lineas):
             try:
                 x, y = map(int, linea.strip().split(','))
+                tiempo_espera = random.randint(1, 5) 
                 hilo_usuario = threading.Thread(target=usuario, args=(i, x, y, tiempo_espera))
                 threads.append(hilo_usuario)
                 hilo_usuario.start()
@@ -84,10 +86,9 @@ def generador_usuarios_desde_archivo(archivo_usuarios, tiempo_espera=5):
         print(f"Error: No se encontró el archivo {archivo_usuarios}")
         return
 
-    # Esperar a que todos los hilos terminen
     for thread in threads:
         thread.join()
 
 if __name__ == "__main__":
-    archivo_usuarios = "coordenadas_usuarios.txt"  # Nombre del archivo con las coordenadas
+    archivo_usuarios = "coordenadas_usuarios.txt"  # No cambiar
     generador_usuarios_desde_archivo(archivo_usuarios)

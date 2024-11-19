@@ -1,36 +1,24 @@
 # Sistema Distribuido de Taxis
 
-## Requisitos Previos
+## Requisitos Previos (en requirements.txt)
 
-1. Python 3.x
-2. pip (gestor de paquetes de Python)
+python-dotenv==1.0.0
+pyzmq==25.1.1
+matplotlib==3.8.0
+pandas==2.1.1
 
-3. Crear y activar entorno virtual:
 
 # Crear entorno virtual
 
 python -m venv venv
 
-# Activar entorno virtual
-
-# En Windows:
-
-venv\Scripts\activate
-
-# En Unix o MacOS:
-
 source venv/bin/activate
 
-3. Instalar dependencias:
+# Instalar dependencias:
    pip install -r requirements.txt
 
-4. Configurar el archivo .env:
 
-# Copiar el archivo de ejemplo
-
-cp .env.example .env
-
-Editar el archivo .env según tu entorno:
+# Editar el archivo .env según el entorno:
 
 # Para pruebas locales
 

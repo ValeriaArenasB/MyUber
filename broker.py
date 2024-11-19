@@ -3,13 +3,13 @@ import zmq
 def broker():
     context = zmq.Context()
 
-    # Socket para recibir mensajes de los taxis (XSUB)
+    # Socket SUB para recibir mensajes de los taxis
     frontend = context.socket(zmq.XSUB)
-    frontend.bind("tcp://*:5555")  # Publicadores (taxis) se conectan aquí
+    frontend.bind("tcp://*:5555")
 
-    # Socket para enviar mensajes al servidor central (XPUB)
+    # Socket PUB para enviar mensajes al servidor central
     backend = context.socket(zmq.XPUB)
-    backend.bind("tcp://*:5556")  # Suscriptores (servidores) se conectan aquí
+    backend.bind("tcp://*:5556")
 
     print("Broker iniciado – esperando mensajes...")
 

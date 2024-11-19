@@ -56,7 +56,7 @@ def health_check():
                     if activate_replica():
                         logger.info("Réplica activada exitosamente")
                         logger.info("Terminando health check ya que la réplica está activa")
-                        return  # Terminar el programa después de activar la réplica
+                        return
                     else:
                         logger.error("No se pudo activar la réplica")
                 
