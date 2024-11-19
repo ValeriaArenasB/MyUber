@@ -24,7 +24,6 @@ def guardar_datos_archivo(json_file, data):
     try:
         with open(json_file, 'w') as file:
             json.dump(data, file, indent=4)
-        logger.info(f"Datos guardados correctamente en {json_file}.")
     except Exception as e:
         logger.error(f"Error al guardar datos en {json_file}: {e}")
 
